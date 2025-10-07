@@ -5,31 +5,43 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 
-interface LoginPageProps {
-  onLogin: () => void;
-  onGoToRegister: () => void;
+interface RegisterPageProps {
+  onRegister: () => void;
+  onBackToLogin: () => void;
 }
 
-export default function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
+export default function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("As senhas não coincidem");
+      return;
+    }
+
+    if (password.length < 4) {
+      setError("A senha deve ter pelo menos 4 caracteres");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await apiRequest("/api/login", {
+      await apiRequest("/api/register", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
-      onLogin();
+      onRegister();
     } catch (err: any) {
-      setError(err.message || "Email ou senha incorretos");
+      setError(err.message || "Erro ao criar conta");
     } finally {
       setLoading(false);
     }
@@ -39,9 +51,9 @@ export default function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-primary to-[hsl(195_100%_50%)] p-4">
       <Card className="w-full max-w-md animate-in fade-in duration-1000">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Gestor de Ganhos</CardTitle>
+          <CardTitle className="text-2xl">Criar Conta</CardTitle>
           <CardDescription>
-            Entre para gerenciar suas finanças
+            Crie sua conta para gerenciar seus ganhos e perdas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -67,28 +79,42 @@ export default function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 data-testid="input-password"
-                placeholder="Sua senha"
+                placeholder="Mínimo 4 caracteres"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                data-testid="input-confirm-password"
+                placeholder="Repita sua senha"
               />
             </div>
             {error && (
-              <p className="text-sm text-destructive" data-testid="text-error">{error}</p>
+              <p className="text-sm text-destructive" data-testid="text-error">
+                {error}
+              </p>
             )}
             <Button
               type="submit"
               className="w-full"
               disabled={loading}
-              data-testid="button-login"
+              data-testid="button-register"
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Criando conta..." : "Criar Conta"}
             </Button>
             <Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={onGoToRegister}
-              data-testid="button-go-to-register"
+              onClick={onBackToLogin}
+              data-testid="button-back-to-login"
             >
-              Criar nova conta
+              Já tenho conta
             </Button>
           </form>
         </CardContent>

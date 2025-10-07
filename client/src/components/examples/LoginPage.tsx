@@ -1,5 +1,10 @@
 import LoginPage from "../LoginPage";
 
 export default function LoginPageExample() {
-  return <LoginPage onLogin={() => console.log("Login successful")} />;
+  return (
+    <LoginPage
+      onLogin={() => console.log("Login successful")}
+      onGoToRegister={() => console.log("Go to register")}
+    />
+  );
 }

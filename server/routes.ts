@@ -3,13 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertEntrySchema } from "@shared/schema";
 import { z } from "zod";
-
-// Extend Express session type
-declare module "express-session" {
-  interface SessionData {
-    userId: string;
-  }
-}
+import "./types";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register new user
