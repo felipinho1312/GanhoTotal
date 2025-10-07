@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import LoginPage from "@/components/LoginPage";
 import RegisterPage from "@/components/RegisterPage";
@@ -7,7 +8,7 @@ import Dashboard from "@/components/Dashboard";
 
 type Page = "login" | "register" | "dashboard";
 
-function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>("login");
 
   // Check if user is already authenticated
@@ -53,7 +54,7 @@ function App() {
   }
 
   return (
-    <ThemeProvider>
+    <>
       {currentPage === "dashboard" ? (
         <Dashboard onLogout={handleLogout} />
       ) : currentPage === "register" ? (
@@ -61,7 +62,17 @@ function App() {
       ) : (
         <LoginPage onLogin={handleLogin} onGoToRegister={handleGoToRegister} />
       )}
-    </ThemeProvider>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

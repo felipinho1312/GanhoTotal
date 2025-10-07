@@ -22,10 +22,7 @@ export default function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
     setLoading(true);
 
     try {
-      await apiRequest("/api/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
+      await apiRequest("POST", "/api/login", { email, password });
 
       onLogin();
     } catch (err: any) {

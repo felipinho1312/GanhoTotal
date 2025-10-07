@@ -40,10 +40,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   // Create entry mutation
   const createEntryMutation = useMutation({
     mutationFn: async (entry: { date: string; amount: number; description: string; type: string }) => {
-      return apiRequest("/api/entries", {
-        method: "POST",
-        body: JSON.stringify(entry),
-      });
+      return apiRequest("POST", "/api/entries", entry);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
@@ -52,7 +49,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   const handleLogout = async () => {
     try {
-      await apiRequest("/api/logout", { method: "POST" });
+      await apiRequest("POST", "/api/logout");
       onLogout();
     } catch (error) {
       console.error("Logout error:", error);

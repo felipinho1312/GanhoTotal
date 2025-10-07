@@ -34,10 +34,7 @@ export default function RegisterPage({ onRegister, onBackToLogin }: RegisterPage
     setLoading(true);
 
     try {
-      await apiRequest("/api/register", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
+      await apiRequest("POST", "/api/register", { email, password });
 
       onRegister();
     } catch (err: any) {
