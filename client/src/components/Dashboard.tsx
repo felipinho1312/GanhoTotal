@@ -1,46 +1,72 @@
 import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import SummaryCards from "./SummaryCards";
-import EntryForm, { type Entry } from "./EntryForm";
+import EntryForm from "./EntryForm";
 import FilterSection, { type FilterOptions } from "./FilterSection";
 import EntriesTable from "./EntriesTable";
 import FinancialCharts from "./FinancialCharts";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Entry as BackendEntry } from "@shared/schema";
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
+// Transform backend entry to frontend entry format
+const transformEntry = (entry: BackendEntry) => ({
+  id: entry.id,
+  date: entry.date,
+  amount: entry.amount,
+  description: entry.description || "",
+  type: entry.type as "Ganho" | "Perda",
+});
+
 export default function Dashboard({ onLogout }: DashboardProps) {
   const { theme, toggleTheme } = useTheme();
-  const [entries, setEntries] = useState<Entry[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({
     startDate: "",
     endDate: "",
     type: "all",
   });
 
-  useEffect(() => {
-    const stored = localStorage.getItem("entries");
-    if (stored) {
-      setEntries(JSON.parse(stored));
-    }
-  }, []);
+  // Fetch entries from backend
+  const { data: backendEntries = [], isLoading } = useQuery<BackendEntry[]>({
+    queryKey: ["/api/entries"],
+  });
 
-  const handleAddEntry = (entry: Omit<Entry, "id">) => {
-    const newEntry = { ...entry, id: crypto.randomUUID() };
-    const updated = [...entries, newEntry];
-    setEntries(updated);
-    localStorage.setItem("entries", JSON.stringify(updated));
+  // Create entry mutation
+  const createEntryMutation = useMutation({
+    mutationFn: async (entry: { date: string; amount: number; description: string; type: string }) => {
+      return apiRequest("/api/entries", {
+        method: "POST",
+        body: JSON.stringify(entry),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+    },
+  });
+
+  const handleLogout = async () => {
+    try {
+      await apiRequest("/api/logout", { method: "POST" });
+      onLogout();
+    } catch (error) {
+      console.error("Logout error:", error);
+      onLogout();
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth");
-    onLogout();
+  const handleAddEntry = (entry: { date: string; amount: number; description: string; type: "Ganho" | "Perda" }) => {
+    createEntryMutation.mutate(entry);
   };
 
   const getFilteredEntries = () => {
+    const entries = backendEntries.map(transformEntry);
+    
     return entries.filter((entry) => {
       let dateMatch = true;
       if (filters.startDate) dateMatch = dateMatch && entry.date >= filters.startDate;
@@ -61,6 +87,14 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const losses = Math.abs(
     filteredEntries.filter((e) => e.amount < 0).reduce((sum, e) => sum + e.amount, 0)
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-lg">Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
