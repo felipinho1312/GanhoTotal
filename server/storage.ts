@@ -53,6 +53,7 @@ export class MemStorage implements IStorage {
       ...insertEntry,
       id,
       userId,
+      description: insertEntry.description ?? null,
       createdAt: new Date(),
     };
     this.entries.set(id, entry);
